@@ -7,12 +7,9 @@ namespace L46_supermarket
     {
         static void Main(string[] args)
         {
-            Random random = new Random();
-            Supermarket supermarket = new Supermarket(random);
+            Supermarket supermarket = new Supermarket();
 
             supermarket.ServeClient();
-
-            Console.WriteLine($"Все клиенты обслужены. Магазин заработал: {supermarket.Money} деревянных.");
         }
     }
 
@@ -21,7 +18,7 @@ namespace L46_supermarket
         private Random _random;
         private List<Product> _products = new List<Product>();
 
-        private int _maxMoney = 100;
+        private int _maxMoney = 150;
         private int _money;
 
         public Client(Random random)
@@ -31,45 +28,32 @@ namespace L46_supermarket
             DialProducts();
         }
 
-        public List<Product> ProductList
+        public IReadOnlyList<Product> ProductList => _products;
+
+        public void BuyGoods(ref int check)
         {
-            get
+            while (check > _money)
             {
-                List<Product> list = new List<Product>();
-
-                foreach (Product product in _products)
-                    list.Add(product);
-
-                return list;
-            }
-        }
-
-        public int BuyGoods(int check)
-        {
-            while (TryPayPucrhases(check) == false)
-            {
-                Product product = RemoveItemFromCart(_random.Next(_products.Count));
-                check -= (int)product;
-                Console.WriteLine($"Клиент выложил: {(Product)product}.");
+                Product productPrice = RemoveItemFromCart(_random.Next(_products.Count));
+                check -= (int)productPrice;
             }
 
-            Console.WriteLine($"Клиент оплатил: {check} деревянных.");
-            _money -= check;
-            return check;
-        }
-
-        private bool TryPayPucrhases(int check)
-        {
-            if (check <= _money)
-                return true;
+            if (check > 0)
+            {
+                Console.WriteLine($"Клиент оплатил: {check} деревянных.");
+                _money -= check;
+            }
             else
-                return false;
+            {
+                Console.WriteLine("У клиента недостаточно средств для покупок.");
+            }
         }
 
         private Product RemoveItemFromCart(int index)
         {
             Product product = _products[index];
             _products.RemoveAt(index);
+            Console.WriteLine($"Клиент выложил: {product}.");
             return product;
         }
 
@@ -91,18 +75,17 @@ namespace L46_supermarket
         private Random _random;
         private Queue<Client> _clients = new Queue<Client>();
 
+        private int _money;
         private int _maxQeueLenght = 10;
         private int _delimeterLenght = 35;
 
         private char _delimeter = '=';
 
-        public Supermarket(Random random)
+        public Supermarket()
         {
-            _random = random;
+            _random = new Random();
             FillQeue(_random.Next(_maxQeueLenght));
         }
-
-        public int Money { get; private set; }
 
         public void ServeClient()
         {
@@ -113,10 +96,12 @@ namespace L46_supermarket
                 Client client = _clients.Dequeue();
                 int check = CalculatePrice(client.ProductList);
                 Console.WriteLine($"Обслуживаем следующего клиента.\nКлиенту насчитали: {check} деревянных.");
-
-                Money += client.BuyGoods(check);
+                client.BuyGoods(ref check);
+                _money += check;
                 Console.WriteLine(new string(_delimeter, _delimeterLenght));
             }
+
+            Console.WriteLine($"Все клиенты обслужены. Магазин заработал: {_money} деревянных.");
         }
 
         private void FillQeue(int qeueLenght)
@@ -125,7 +110,7 @@ namespace L46_supermarket
                 _clients.Enqueue(new Client(_random));
         }
 
-        private int CalculatePrice(List<Product> productList)
+        private int CalculatePrice(IReadOnlyList<Product> productList)
         {
             int check = 0;
 
