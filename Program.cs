@@ -60,9 +60,9 @@ namespace L46_supermarket
         private void DialProducts()
         {
             Array listProduct = Enum.GetValues(typeof(Product));
-            int countProduct = _random.Next(listProduct.Length);
+            int productsCount = _random.Next(listProduct.Length);
 
-            for (int i = 0; i < countProduct; i++)
+            for (int i = 0; i < productsCount; i++)
             {
                 int randomNumberProduct = _random.Next(listProduct.Length);
                 _products.Add((Product)listProduct.GetValue(randomNumberProduct));
@@ -89,9 +89,9 @@ namespace L46_supermarket
 
         public void ServeClient()
         {
-            int clientCount = _clients.Count;
+            int clientsCount = _clients.Count;
 
-            for (int i = 0; i < clientCount; i++)
+            for (int i = 0; i < clientsCount; i++)
             {
                 Client client = _clients.Dequeue();
                 int check = CalculatePrice(client.ProductList);
@@ -114,8 +114,8 @@ namespace L46_supermarket
         {
             int check = 0;
 
-            foreach (var product in productList)
-                check += (int)product;
+            foreach (var productPrice in productList)
+                check += (int)productPrice;
 
             return check;
         }
