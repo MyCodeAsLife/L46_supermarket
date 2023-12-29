@@ -30,7 +30,7 @@ namespace L46_supermarket
 
         public IReadOnlyList<Product> ProductList => _products;
 
-        public void BuyGoods(ref int check)
+        public int BuyGoods(int check)
         {
             while (check > _money)
             {
@@ -47,6 +47,8 @@ namespace L46_supermarket
             {
                 Console.WriteLine("Клиент ничего не купил.");
             }
+
+            return check;
         }
 
         private Product RemoveItemFromCart(int index)
@@ -95,8 +97,11 @@ namespace L46_supermarket
                 Client client = _clients.Dequeue();
                 int check = CalculatePrice(client.ProductList);
                 Console.WriteLine($"Обслуживаем следующего клиента.\nКлиенту насчитали: {check} деревянных.");
-                client.BuyGoods(ref check);
-                _money += check;
+                int paidCheck = client.BuyGoods(check);
+
+                if (paidCheck > 0)
+                    _money += paidCheck;
+
                 Console.WriteLine(new string(_delimeter, _delimeterLenght));
             }
 
