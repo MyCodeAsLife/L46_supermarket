@@ -139,17 +139,17 @@ namespace L46_supermarket
     class ProductCreator
     {
         private List<int> _priceList = new List<int>();
+        private List<string> _productList = new List<string>();
         private int _minPrice = 5;
         private int _maxPrice = 70;
 
         public ProductCreator()
         {
-            ProductList = new List<string>();
             var tempList = Enum.GetValues(typeof(ProductsType));
 
             foreach (var product in tempList)
             {
-                ProductList.Add(product.ToString());
+                _productList.Add(product.ToString());
                 _priceList.Add(RandomGenerator.GetRandomNumber(_minPrice, _maxPrice + 1));
             }
         }
@@ -169,7 +169,7 @@ namespace L46_supermarket
             Candies,
         }
 
-        public List<string> ProductList { get; private set; }
+        public IReadOnlyList<string> ProductList => _productList;
 
         public Product Create(int productIndex) => new Product(ProductList[productIndex], _priceList[productIndex]);
     }
