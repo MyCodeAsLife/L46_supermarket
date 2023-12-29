@@ -15,17 +15,16 @@ namespace L46_supermarket
 
     class Client
     {
-        private readonly Supermarket _supermarket;
-        private List<Product> _products = new List<Product>();
+        private List<Product> _products;
 
         private int _maxMoney = 150;
         private int _money;
 
-        public Client(Supermarket supermarket)
+        public Client(List<Product> products)
         {
-            _supermarket = supermarket;
+            _products = products;
             _money = RandomGenerator.GetRandomNumber(_maxMoney);
-            DialProducts();
+
         }
 
         public IReadOnlyList<Product> ProductList => _products;
@@ -58,23 +57,11 @@ namespace L46_supermarket
             Console.WriteLine($"Клиент выложил: {product.Type}.");
             return product;
         }
-
-        private void DialProducts()
-        {
-            IReadOnlyList<string> producstList = _supermarket.GetProductList();
-            int productsCount = RandomGenerator.GetRandomNumber(producstList.Count);
-
-            for (int i = 0; i < productsCount; i++)
-            {
-                int randomNumberProduct = RandomGenerator.GetRandomNumber(producstList.Count);
-                _products.Add(_supermarket.GetProduct(randomNumberProduct));
-            }
-        }
     }
 
     class Supermarket
     {
-        private ProductCreator _creator = new ProductCreator();
+        private ProductCreator _productCreator = new ProductCreator();
         private Queue<Client> _clients = new Queue<Client>();
 
         private int _money = 0;
@@ -108,14 +95,10 @@ namespace L46_supermarket
             Console.WriteLine($"Все клиенты обслужены. Магазин заработал: {_money} деревянных.");
         }
 
-        public Product GetProduct(int productIndex) => _creator.Create(productIndex);
-
-        public IReadOnlyList<string> GetProductList() => _creator.ProductList;
-
         private void FillQeue(int qeueLenght)
         {
             for (int i = 0; i < qeueLenght; i++)
-                _clients.Enqueue(new Client(this));
+                _clients.Enqueue(new Client(TransferProducts()));
         }
 
         private int CalculatePrice(IReadOnlyList<Product> productList)
@@ -126,6 +109,20 @@ namespace L46_supermarket
                 check += product.Price;
 
             return check;
+        }
+
+        private List<Product> TransferProducts()
+        {
+            List<Product> _products = new List<Product>();
+            int productsCount = RandomGenerator.GetRandomNumber(_productCreator.ProductList.Count);
+
+            for (int i = 0; i < productsCount; i++)
+            {
+                int randomNumberProduct = RandomGenerator.GetRandomNumber(_productCreator.ProductList.Count);
+                _products.Add(_productCreator.Create(randomNumberProduct));
+            }
+
+            return _products;
         }
     }
 
