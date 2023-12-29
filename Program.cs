@@ -15,16 +15,16 @@ namespace L46_supermarket
 
     class Client
     {
-        private Random _random;
+        private readonly Supermarket _supermarket;
         private List<Product> _products = new List<Product>();
 
         private int _maxMoney = 150;
         private int _money;
 
-        public Client(Random random)
+        public Client(Supermarket supermarket)
         {
-            _random = random;
-            _money = _random.Next(_maxMoney);
+            _supermarket = supermarket;
+            _money = RandomGenerator.GetRandomNumber(_maxMoney);
             DialProducts();
         }
 
@@ -34,8 +34,8 @@ namespace L46_supermarket
         {
             while (check > _money)
             {
-                Product productPrice = RemoveItemFromCart(_random.Next(_products.Count));
-                check -= (int)productPrice;
+                Product removedProduct = RemoveItemFromCart(RandomGenerator.GetRandomNumber(_products.Count));
+                check -= removedProduct.Price;
             }
 
             if (check > 0)
@@ -45,7 +45,7 @@ namespace L46_supermarket
             }
             else
             {
-                Console.WriteLine("У клиента недостаточно средств для покупок.");
+                Console.WriteLine("Клиент ничего не купил.");
             }
         }
 
@@ -53,29 +53,29 @@ namespace L46_supermarket
         {
             Product product = _products[index];
             _products.RemoveAt(index);
-            Console.WriteLine($"Клиент выложил: {product}.");
+            Console.WriteLine($"Клиент выложил: {product.Type}.");
             return product;
         }
 
         private void DialProducts()
         {
-            Array listProduct = Enum.GetValues(typeof(Product));
-            int productsCount = _random.Next(listProduct.Length);
+            IReadOnlyList<string> producstList = _supermarket.GetProductList();
+            int productsCount = RandomGenerator.GetRandomNumber(producstList.Count);
 
             for (int i = 0; i < productsCount; i++)
             {
-                int randomNumberProduct = _random.Next(listProduct.Length);
-                _products.Add((Product)listProduct.GetValue(randomNumberProduct));
+                int randomNumberProduct = RandomGenerator.GetRandomNumber(producstList.Count);
+                _products.Add(_supermarket.GetProduct(randomNumberProduct));
             }
         }
     }
 
     class Supermarket
     {
-        private Random _random;
+        private ProductCreator _creator = new ProductCreator();
         private Queue<Client> _clients = new Queue<Client>();
 
-        private int _money;
+        private int _money = 0;
         private int _maxQeueLenght = 10;
         private int _delimeterLenght = 35;
 
@@ -83,8 +83,7 @@ namespace L46_supermarket
 
         public Supermarket()
         {
-            _random = new Random();
-            FillQeue(_random.Next(_maxQeueLenght));
+            FillQeue(RandomGenerator.GetRandomNumber(_maxQeueLenght));
         }
 
         public void ServeClient()
@@ -104,35 +103,83 @@ namespace L46_supermarket
             Console.WriteLine($"Все клиенты обслужены. Магазин заработал: {_money} деревянных.");
         }
 
+        public Product GetProduct(int productIndex) => _creator.Create(productIndex);
+
+        public IReadOnlyList<string> GetProductList() => _creator.ProductList;
+
         private void FillQeue(int qeueLenght)
         {
             for (int i = 0; i < qeueLenght; i++)
-                _clients.Enqueue(new Client(_random));
+                _clients.Enqueue(new Client(this));
         }
 
         private int CalculatePrice(IReadOnlyList<Product> productList)
         {
             int check = 0;
 
-            foreach (var productPrice in productList)
-                check += (int)productPrice;
+            foreach (var product in productList)
+                check += product.Price;
 
             return check;
         }
     }
 
-    enum Product
+    class Product
     {
-        Apple = 30,
-        Chips = 15,
-        Milk = 33,
-        Cheese = 27,
-        Sausage = 55,
-        Carrot = 22,
-        Onion = 20,
-        MineralWater = 10,
-        Beef = 48,
-        Chocolate = 17,
-        Candies = 25,
+        public Product(string type, int price)
+        {
+            Type = type;
+            Price = price;
+        }
+
+        public string Type { get; private set; }
+        public int Price { get; private set; }
+    }
+
+    class ProductCreator
+    {
+        private List<int> _priceList = new List<int>();
+        private int _minPrice = 5;
+        private int _maxPrice = 70;
+
+        public ProductCreator()
+        {
+            ProductList = new List<string>();
+            var tempList = Enum.GetValues(typeof(ProductsType));
+
+            foreach (var product in tempList)
+            {
+                ProductList.Add(product.ToString());
+                _priceList.Add(RandomGenerator.GetRandomNumber(_minPrice, _maxPrice + 1));
+            }
+        }
+
+        private enum ProductsType
+        {
+            Apple,
+            Chips,
+            Milk,
+            Cheese,
+            Sausage,
+            Carrot,
+            Onion,
+            MineralWater,
+            Beef,
+            Chocolate,
+            Candies,
+        }
+
+        public List<string> ProductList { get; private set; }
+
+        public Product Create(int productIndex) => new Product(ProductList[productIndex], _priceList[productIndex]);
+    }
+
+    static class RandomGenerator
+    {
+        private static Random s_random = new Random();
+
+        public static int GetRandomNumber(int minValue, int maxValue) => s_random.Next(minValue, maxValue);
+
+        public static int GetRandomNumber(int maxValue) => s_random.Next(maxValue);
     }
 }
